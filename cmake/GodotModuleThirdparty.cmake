@@ -107,9 +107,15 @@ godot_module_tp(websocket INCLUDES "${_T}/wslay" "${_T}/wslay/wslay" DEFINES HAV
 
 # ---- Codecs / compression -----------------------------------------------------------------
 godot_module_tp(basis_universal INCLUDES "${_T}/basis_universal" "${_T}/tinyexr" "${_T}/zstd")
+# ktx: on editor builds use MINIZ_HEADER_FILE_ONLY so ktx reuses basis_universal's miniz instead
+# of compiling its own (modules/ktx/SCsub:44-46). vulkan is on, so no LIBKTX (uses vulkan headers).
+set(_ktx_defs "KHRONOS_STATIC=1")
+if(GODOT_EDITOR_BUILD)
+  list(APPEND _ktx_defs MINIZ_HEADER_FILE_ONLY)
+endif()
 godot_module_tp(ktx INCLUDES "${_T}/libktx/include" "${_T}/libktx/utils" "${_T}/libktx/lib"
   "${_T}/libktx/other_include" "${_T}/libktx/external" "${_T}/basis_universal"
-  DEFINES KHRONOS_STATIC BASISU_SUPPORT_OPENCL=0 LIBKTX)
+  DEFINES ${_ktx_defs})
 
 # ---- Geometry / physics / 3D --------------------------------------------------------------
 godot_module_tp(glslang INCLUDES "${_T}/glslang" "${_T}" "${_T}/spirv-headers/include/spirv/unified1"

@@ -71,7 +71,11 @@ _mod_inc(bcdec "${_T}/bcdec")
 _mod_inc(dds "${_T}/bcdec")
 _mod_inc(ktx "${_T}/libktx/include" "${_T}/libktx/utils" "${_T}/libktx/lib"
          "${_T}/libktx/other_include" "${_T}/libktx/external" "${_T}/basis_universal")
-_mod_def(ktx KHRONOS_STATIC LIBKTX "BASISU_SUPPORT_OPENCL=0")
+if(GODOT_EDITOR_BUILD)
+  _mod_def(ktx "KHRONOS_STATIC=1" MINIZ_HEADER_FILE_ONLY)
+else()
+  _mod_def(ktx "KHRONOS_STATIC=1")
+endif()
 _mod_inc(tinyexr "${_T}/tinyexr")
 _mod_def(tinyexr TINYEXR_USE_THREAD "TINYEXR_USE_MINIZ=0")
 

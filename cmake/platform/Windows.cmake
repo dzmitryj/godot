@@ -12,6 +12,9 @@ if(NOT MSVC)
                       "(detected compiler: ${CMAKE_CXX_COMPILER_ID}).")
 endif()
 
+# Needed to compile the Windows resource script (icon/manifest/version) into the executables.
+enable_language(RC)
+
 add_library(godot_platform_windows INTERFACE)
 
 # ---- Compile flags (CCFLAGS in detect.py + SConstruct conformance/standard blocks) ---------
