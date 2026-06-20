@@ -1,0 +1,28 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 24, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "windows-editor",
+      "displayName": "Windows Editor (MSVC x86_64)",
+      "description": "Parallel CMake build of the Windows editor. Configure/build from a VS x64 dev environment (VsDevCmd) so cl/link/ninja are available.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/cmake/windows-editor",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_COMPILER": "cl",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "GODOT_PLATFORM": "windows",
+        "GODOT_TARGET": "editor",
+        "GODOT_ARCH": "x86_64",
+        "GODOT_SDL": "OFF"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "windows-editor",
+      "configurePreset": "windows-editor"
+    }
+  ]
+}
