@@ -210,5 +210,8 @@ include(GodotEditor)
 # main (main/SCsub): entry-point glue; main.cpp pulls in editor codegen (now available).
 godot_add_component(godot_main ROOTS main)
 
+# tests (tests/SCsub): unit-test suite, only when GODOT_TESTS. Defines godot_tests + its gens.
+include(GodotTests)
+
 # ---- Final executable (Stage 7) -----------------------------------------------------------
 include(GodotExecutable)

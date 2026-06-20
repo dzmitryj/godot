@@ -89,7 +89,11 @@ foreach(_mod IN LISTS GODOT_ENABLED_MODULES)
   endif()
   file(GLOB_RECURSE _msrcs CONFIGURE_DEPENDS "${_mpath}/*.cpp")
   list(FILTER _msrcs EXCLUDE REGEX "\\.gen\\.cpp$")
-  list(FILTER _msrcs EXCLUDE REGEX "/tests/")
+  # A module's tests/*.cpp compile into the module only when GODOT_TESTS (SCsub: if env["tests"]),
+  # so they get the module's own include dirs/defines. test_main.cpp references their symbols.
+  if(NOT GODOT_TESTS)
+    list(FILTER _msrcs EXCLUDE REGEX "/tests/")
+  endif()
   # Editor-only module subdirs (gated on env.editor_build in the module SCsubs): exclude for
   # template builds. editor/ is the convention; gdscript also gates language_server/.
   if(NOT GODOT_EDITOR_BUILD)

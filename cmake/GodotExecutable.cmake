@@ -40,6 +40,7 @@ endif()
 
 target_link_libraries(godot PRIVATE
   godot_main
+  ${GODOT_TESTS_LIB}        # unit-test suite (only when GODOT_TESTS); main.cpp calls test_main()
   godot_modules_register
   ${GODOT_MODULE_LIBS}
   ${_editor_lib}
