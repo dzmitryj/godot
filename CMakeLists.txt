@@ -104,13 +104,22 @@ endif()
 if(GODOT_OPENGL3)
   list(APPEND _drv_dirs gl_context gles3 egl)
 endif()
+if(GODOT_SDL)
+  list(APPEND _drv_dirs sdl)
+endif()
 foreach(_d IN LISTS _drv_dirs)
   file(GLOB_RECURSE _dd CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/drivers/${_d}/*.cpp")
   list(APPEND _drv_srcs ${_dd})
 endforeach()
 list(FILTER _drv_srcs EXCLUDE REGEX "\\.gen\\.cpp$")
 add_library(godot_drivers STATIC ${_drv_srcs})
-target_link_libraries(godot_drivers PUBLIC godot_defines godot_platform_windows PRIVATE ${GODOT_DRIVERS_THIRDPARTY})
+target_link_libraries(godot_drivers PUBLIC godot_defines godot_platform_windows PRIVATE ${GODOT_DRIVERS_THIRDPARTY} ${GODOT_SDL_THIRDPARTY})
+if(GODOT_SDL)
+  # drivers/sdl/*.cpp include <SDL3/SDL.h>.
+  target_include_directories(godot_drivers PRIVATE
+    "${CMAKE_SOURCE_DIR}/thirdparty/sdl" "${CMAKE_SOURCE_DIR}/thirdparty/sdl/include"
+    "${CMAKE_SOURCE_DIR}/thirdparty/sdl/include/build_config" "${CMAKE_SOURCE_DIR}/drivers/sdl")
+endif()
 add_dependencies(godot_drivers godot_generated godot_shaders)
 list(LENGTH _drv_srcs _n_drv)
 message(STATUS "component godot_drivers: ${_n_drv} sources")
@@ -122,11 +131,34 @@ message(STATUS "component godot_drivers: ${_n_drv} sources")
 set(_plat_win
   os_windows.cpp display_server_windows.cpp key_mapping_windows.cpp windows_terminal_logger.cpp
   windows_utils.cpp native_menu_windows.cpp gl_manager_windows_native.cpp wgl_detect_version.cpp
-  rendering_context_driver_vulkan_windows.cpp drop_target_windows.cpp crash_handler_windows_seh.cpp
-  tts_windows.cpp tts_driver_sapi.cpp winrt_utils.cpp)
+  rendering_context_driver_vulkan_windows.cpp drop_target_windows.cpp crash_handler_windows_seh.cpp)
 list(TRANSFORM _plat_win PREPEND "${CMAKE_SOURCE_DIR}/platform/windows/")
 add_library(godot_platform STATIC ${_plat_win} "${GODOT_GEN_DIR}/platform/register_platform_apis.gen.cpp")
 target_link_libraries(godot_platform PUBLIC godot_defines godot_platform_windows)
+
+# TTS lives in a separate object lib: WinRT/OneCore TTS needs C++20 + exceptions (per
+# platform/windows/SCsub), which conflicts with the engine's c++17 + _HAS_EXCEPTIONS=0. Without
+# WinRT it's the SAPI driver at normal flags. WINRT_ENABLED is used only by these TTS files.
+set(_tts_srcs platform/windows/tts_windows.cpp platform/windows/tts_driver_sapi.cpp
+  platform/windows/winrt_utils.cpp)
+if(GODOT_WINRT)
+  list(APPEND _tts_srcs platform/windows/tts_driver_onecore.cpp)
+endif()
+add_library(godot_tts OBJECT ${_tts_srcs})
+target_include_directories(godot_tts PRIVATE "${CMAKE_SOURCE_DIR}/platform/windows")
+if(GODOT_WINRT)
+  # Don't link godot_platform_windows (it forces _HAS_EXCEPTIONS=0); supply the needed flags here.
+  target_link_libraries(godot_tts PRIVATE godot_defines)
+  set_target_properties(godot_tts PROPERTIES CXX_STANDARD 20)
+  # /Zc:__cplusplus is required or MSVC reports the old __cplusplus value and the engine's
+  # C++17-minimum static_assert (core/typedefs.h) fails. /permissive- matches the engine compile.
+  target_compile_options(godot_tts PRIVATE /MT /utf-8 /nologo /bigobj /EHsc /permissive- /Zc:__cplusplus)
+  target_compile_definitions(godot_tts PRIVATE WINDOWS_ENABLED WINVER=0x0A00 _WIN32_WINNT=0x0A00
+    NOMINMAX _WIN64 WINRT_ENABLED)
+else()
+  target_link_libraries(godot_tts PRIVATE godot_defines godot_platform_windows)
+endif()
+target_link_libraries(godot_platform PRIVATE godot_tts)
 # register_platform_apis.gen.cpp does a bare #include "register_platform_apis.h" (sibling in source).
 target_include_directories(godot_platform PRIVATE "${CMAKE_SOURCE_DIR}/platform")
 add_dependencies(godot_platform godot_generated godot_shaders)

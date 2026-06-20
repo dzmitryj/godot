@@ -147,6 +147,19 @@ if(GODOT_VULKAN)
   set(GODOT_DRIVERS_THIRDPARTY "${GODOT_DRIVERS_THIRDPARTY};tp_respirv" CACHE INTERNAL "")
 endif()
 
+# ---- drivers/sdl/SCsub thirdparty (bundled SDL3, Windows subset) ---------------------------
+if(GODOT_SDL)
+  include("${CMAKE_SOURCE_DIR}/cmake/thirdparty_lists/sdl.cmake")
+  godot_add_thirdparty(tp_sdl SOURCES ${GODOT_TP_SDL_SOURCES}
+    INCLUDES sdl sdl/include sdl/include/build_config
+    DEFINES SDL_PLATFORM_PRIVATE SDL_PLATFORM_WINDOWS)
+  # drivers/sdl provides SDL_build_config_private.h (the SCsub's "." include).
+  target_include_directories(tp_sdl PRIVATE "${CMAKE_SOURCE_DIR}/drivers/sdl")
+  set(GODOT_SDL_THIRDPARTY tp_sdl CACHE INTERNAL "")
+else()
+  set(GODOT_SDL_THIRDPARTY "" CACHE INTERNAL "")
+endif()
+
 # ---- servers/rendering/renderer_rd/effects/SCsub thirdparty (AMD FSR2) ---------------------
 if(GODOT_VULKAN OR GODOT_D3D12)
   godot_add_thirdparty(tp_fsr2 SOURCES amd-fsr2/ffx_assert.cpp amd-fsr2/ffx_fsr2.cpp

@@ -12,8 +12,7 @@
         "CMAKE_CXX_COMPILER": "cl",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "GODOT_PLATFORM": "windows",
-        "GODOT_ARCH": "x86_64",
-        "GODOT_SDL": "OFF"
+        "GODOT_ARCH": "x86_64"
       }
     },
     {

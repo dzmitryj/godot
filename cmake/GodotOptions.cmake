@@ -30,9 +30,7 @@ option(GODOT_BROTLI     "Brotli compression + WOFF2 (BROTLI_ENABLED)"         ON
 option(GODOT_VULKAN   "Vulkan / RenderingDevice renderer (VULKAN_ENABLED)"    ON)
 option(GODOT_OPENGL3  "OpenGL / GLES3 renderer (GLES3_ENABLED)"               ON)
 option(GODOT_USE_VOLK "Load Vulkan dynamically via volk"                      ON)
-# Default OFF for the first build: SDL bundles a large thirdparty tree. Disables joypad input
-# only; the editor still runs. (Documented divergence from SCons default sdl=ON.)
-option(GODOT_SDL      "SDL input driver (SDL_ENABLED)"                        OFF)
+option(GODOT_SDL      "SDL input driver (SDL_ENABLED)"                        ON)
 
 # Disable switches (export-template only; rejected for editor builds, mirroring SConstruct).
 option(GODOT_DISABLE_3D            "Disable 3D nodes (_3D_DISABLED)"          OFF)
@@ -51,7 +49,7 @@ option(GODOT_MODULES_ENABLED_BY_DEFAULT "Enable all detected modules by default"
 option(GODOT_D3D12     "Direct3D 12 renderer (needs mesa/NIR + Agility SDK)"  OFF)
 option(GODOT_ANGLE     "OpenGL via ANGLE (needs prebuilt ANGLE libs)"         OFF)
 option(GODOT_ACCESSKIT "Screen-reader support (needs AccessKit C SDK)"        OFF)
-option(GODOT_WINRT     "WinRT/OneCore TTS (needs cppwinrt)"                   OFF)
+option(GODOT_WINRT     "WinRT/OneCore TTS (MSVC: uses system Windows SDK)"    ON)
 
 # Windows specifics
 set(GODOT_WINDOWS_SUBSYSTEM "gui" CACHE STRING "Windows subsystem: gui | console")
