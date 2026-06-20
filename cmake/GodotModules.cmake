@@ -90,6 +90,11 @@ foreach(_mod IN LISTS GODOT_ENABLED_MODULES)
   file(GLOB_RECURSE _msrcs CONFIGURE_DEPENDS "${_mpath}/*.cpp")
   list(FILTER _msrcs EXCLUDE REGEX "\\.gen\\.cpp$")
   list(FILTER _msrcs EXCLUDE REGEX "/tests/")
+  # Editor-only module subdirs (gated on env.editor_build in the module SCsubs): exclude for
+  # template builds. editor/ is the convention; gdscript also gates language_server/.
+  if(NOT GODOT_EDITOR_BUILD)
+    list(FILTER _msrcs EXCLUDE REGEX "/(editor|language_server)/")
+  endif()
   # camera/SCsub selects only the platform backend (we build Windows): drop the others.
   if(_mod STREQUAL "camera")
     list(FILTER _msrcs EXCLUDE REGEX "camera_(linux|android|apple|feed_linux)|buffer_decoder")

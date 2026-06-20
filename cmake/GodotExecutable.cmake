@@ -32,11 +32,17 @@ add_executable(godot "${_entry}" "${_res}" ${_cpu_check_objs})
 target_include_directories(godot PRIVATE "${CMAKE_SOURCE_DIR}" "${GODOT_GEN_DIR}")
 add_dependencies(godot godot_generated)  # version_generated.gen.h for the .rc
 
+# godot_editor only exists for editor builds (GodotEditor.cmake returns early otherwise).
+set(_editor_lib "")
+if(GODOT_EDITOR_BUILD)
+  set(_editor_lib godot_editor)
+endif()
+
 target_link_libraries(godot PRIVATE
   godot_main
   godot_modules_register
   ${GODOT_MODULE_LIBS}
-  godot_editor
+  ${_editor_lib}
   godot_scene
   godot_servers
   godot_drivers
