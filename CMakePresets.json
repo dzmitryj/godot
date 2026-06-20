@@ -1,0 +1,85 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 24, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "windows-base",
+      "hidden": true,
+      "description": "Common Windows MSVC x86_64 settings. Configure/build from a VS dev environment (VsDevCmd) so cl/link/ninja are available.",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_COMPILER": "cl",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "GODOT_PLATFORM": "windows",
+        "GODOT_ARCH": "x86_64"
+      }
+    },
+    {
+      "name": "windows-editor",
+      "inherits": "windows-base",
+      "displayName": "Windows Editor (MSVC x86_64)",
+      "binaryDir": "${sourceDir}/out/cmake/windows-editor",
+      "cacheVariables": { "GODOT_TARGET": "editor" }
+    },
+    {
+      "name": "windows-template-debug",
+      "inherits": "windows-base",
+      "displayName": "Windows Template Debug (MSVC x86_64)",
+      "binaryDir": "${sourceDir}/out/cmake/windows-template-debug",
+      "cacheVariables": { "GODOT_TARGET": "template_debug" }
+    },
+    {
+      "name": "windows-template-release",
+      "inherits": "windows-base",
+      "displayName": "Windows Template Release (MSVC x86_64)",
+      "binaryDir": "${sourceDir}/out/cmake/windows-template-release",
+      "cacheVariables": { "GODOT_TARGET": "template_release" }
+    },
+    {
+      "name": "windows-tests",
+      "inherits": "windows-base",
+      "displayName": "Windows Editor + unit tests",
+      "binaryDir": "${sourceDir}/out/cmake/windows-tests",
+      "cacheVariables": { "GODOT_TARGET": "editor", "GODOT_TESTS": "ON" }
+    },
+    {
+      "name": "windows-double",
+      "inherits": "windows-base",
+      "displayName": "Windows Editor (double precision)",
+      "binaryDir": "${sourceDir}/out/cmake/windows-double",
+      "cacheVariables": { "GODOT_TARGET": "editor", "GODOT_PRECISION": "double" }
+    },
+    {
+      "name": "windows-dev",
+      "inherits": "windows-base",
+      "displayName": "Windows Editor (dev build)",
+      "binaryDir": "${sourceDir}/out/cmake/windows-dev",
+      "cacheVariables": { "GODOT_TARGET": "editor", "GODOT_DEV_BUILD": "ON" }
+    },
+    {
+      "name": "windows-lto",
+      "inherits": "windows-base",
+      "displayName": "Windows Editor (LTO)",
+      "binaryDir": "${sourceDir}/out/cmake/windows-lto",
+      "cacheVariables": { "GODOT_TARGET": "editor", "GODOT_LTO": "full" }
+    },
+    {
+      "name": "windows-editor-arm64",
+      "inherits": "windows-base",
+      "displayName": "Windows Editor (arm64 cross, build-only)",
+      "binaryDir": "${sourceDir}/out/cmake/windows-editor-arm64",
+      "cacheVariables": { "GODOT_TARGET": "editor", "GODOT_ARCH": "arm64" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "windows-editor", "configurePreset": "windows-editor" },
+    { "name": "windows-template-debug", "configurePreset": "windows-template-debug" },
+    { "name": "windows-template-release", "configurePreset": "windows-template-release" },
+    { "name": "windows-tests", "configurePreset": "windows-tests" },
+    { "name": "windows-double", "configurePreset": "windows-double" },
+    { "name": "windows-dev", "configurePreset": "windows-dev" },
+    { "name": "windows-lto", "configurePreset": "windows-lto" },
+    { "name": "windows-editor-arm64", "configurePreset": "windows-editor-arm64" }
+  ]
+}
