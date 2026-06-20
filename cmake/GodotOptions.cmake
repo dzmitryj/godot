@@ -44,12 +44,18 @@ option(GODOT_DISABLE_XR            "Disable XR (XR_DISABLED)"                  O
 # Modules
 option(GODOT_MODULES_ENABLED_BY_DEFAULT "Enable all detected modules by default" ON)
 
-# Prebuilt-SDK features: default OFF (documented divergence from SCons defaults).
-# Each needs an external SDK; the editor still builds/runs without them (RD via Vulkan, GL via WGL).
-option(GODOT_D3D12     "Direct3D 12 renderer (needs mesa/NIR + Agility SDK)"  OFF)
-option(GODOT_ANGLE     "OpenGL via ANGLE (needs prebuilt ANGLE libs)"         OFF)
-option(GODOT_ACCESSKIT "Screen-reader support (needs AccessKit C SDK)"        OFF)
+# Prebuilt-SDK features: need an external SDK fetched by misc/scripts/install_*.py into
+# GODOT_BUILD_DEPS (bin/build_deps by default; that's where the install scripts land under MSYS/Git-Bash).
+option(GODOT_D3D12     "Direct3D 12 renderer (needs mesa/NIR + Agility SDK)"  ON)
+option(GODOT_ANGLE     "OpenGL via ANGLE (needs prebuilt ANGLE libs)"         ON)
+option(GODOT_ACCESSKIT "Screen-reader support (needs AccessKit C SDK)"        ON)
 option(GODOT_WINRT     "WinRT/OneCore TTS (MSVC: uses system Windows SDK)"    ON)
+set(GODOT_BUILD_DEPS "${CMAKE_SOURCE_DIR}/bin/build_deps" CACHE PATH "Prebuilt SDK dir (install_*.py output)")
+
+# Link-time optimization + builds.
+set(GODOT_LTO "none" CACHE STRING "LTO: none | full")
+set_property(CACHE GODOT_LTO PROPERTY STRINGS none full)
+option(GODOT_TESTS "Build the unit-test suite (run with --test)" OFF)
 
 # Windows specifics
 set(GODOT_WINDOWS_SUBSYSTEM "gui" CACHE STRING "Windows subsystem: gui | console")

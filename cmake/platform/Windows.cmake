@@ -124,6 +124,55 @@ endif()
 
 target_link_options(godot_platform_windows INTERFACE ${_lflags})
 
+# ---- LTO (SConstruct ~573-588: MSVC uses /GL + /LTCG) --------------------------------------
+if(NOT GODOT_LTO STREQUAL "none")
+  target_compile_options(godot_platform_windows INTERFACE /GL)
+  target_link_options(godot_platform_windows INTERFACE /LTCG)
+  string(APPEND CMAKE_STATIC_LINKER_FLAGS " /LTCG")  # archiver needs it for /GL objects
+endif()
+
+# ---- Prebuilt-SDK features (paths from GODOT_BUILD_DEPS; install_*.py output) ---------------
+set(_arch "${GODOT_ARCH}")
+
+# ANGLE: GL ES over D3D11 (detect.py ~536-549).
+if(GODOT_ANGLE)
+  set(_angle "${GODOT_BUILD_DEPS}/angle-${_arch}-msvc")
+  if(NOT EXISTS "${_angle}")
+    message(FATAL_ERROR "GODOT_ANGLE=ON but '${_angle}' is missing. Run: python misc/scripts/install_angle.py")
+  endif()
+  target_include_directories(godot_platform_windows INTERFACE "${CMAKE_SOURCE_DIR}/thirdparty/angle/include")
+  # gl_context/SCsub also sets EGL_ENABLED + GLAD_GLES2 for Windows+ANGLE (EGL comes from libEGL).
+  target_compile_definitions(godot_platform_windows INTERFACE ANGLE_ENABLED EGL_STATIC EGL_ENABLED GLAD_GLES2)
+  target_link_directories(godot_platform_windows INTERFACE "${_angle}")
+  target_link_libraries(godot_platform_windows INTERFACE
+    "libANGLE.windows.${_arch}" "libEGL.windows.${_arch}" "libGLES.windows.${_arch}" dxgi d3d9 d3d11)
+endif()
+
+# AccessKit screen reader (detect.py ~473-492).
+if(GODOT_ACCESSKIT)
+  set(_ak "${GODOT_BUILD_DEPS}/accesskit")
+  if(NOT EXISTS "${_ak}/include")
+    message(FATAL_ERROR "GODOT_ACCESSKIT=ON but '${_ak}' is missing. Run: python misc/scripts/install_accesskit.py")
+  endif()
+  target_include_directories(godot_platform_windows INTERFACE "${_ak}/include")
+  target_compile_definitions(godot_platform_windows INTERFACE ACCESSKIT_ENABLED)
+  target_link_directories(godot_platform_windows INTERFACE "${_ak}/lib/windows/${_arch}/msvc/static")
+  target_link_libraries(godot_platform_windows INTERFACE
+    accesskit uiautomationcore runtimeobject propsys oleaut32 user32 userenv ntdll)
+endif()
+
+# D3D12 link side (defines/driver-include/d3d12ma are wired in the root for the drivers component).
+if(GODOT_D3D12)
+  set(_mesa "${GODOT_BUILD_DEPS}/mesa-${_arch}-msvc")
+  if(NOT EXISTS "${_mesa}/bin")
+    message(FATAL_ERROR "GODOT_D3D12=ON but '${_mesa}' is missing. Run: python misc/scripts/install_d3d12_sdk_windows.py")
+  endif()
+  # DCOMP_ENABLED is set globally (a d3d12 header included from platform code checks it).
+  target_compile_definitions(godot_platform_windows INTERFACE D3D12_ENABLED RD_ENABLED DCOMP_ENABLED)
+  target_link_directories(godot_platform_windows INTERFACE "${_mesa}/bin")
+  target_link_libraries(godot_platform_windows INTERFACE dxgi dxguid version "libNIR.windows.${_arch}")
+endif()
+
 # ---- Win32 system libraries (detect.py ~440-471) -------------------------------------------
 set(_syslibs
   winmm dsound kernel32 ole32 oleaut32 sapi user32 gdi32 IPHLPAPI Shlwapi Shcore

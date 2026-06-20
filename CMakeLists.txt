@@ -107,6 +107,9 @@ endif()
 if(GODOT_SDL)
   list(APPEND _drv_dirs sdl)
 endif()
+if(GODOT_ACCESSKIT)
+  list(APPEND _drv_dirs accesskit)
+endif()
 foreach(_d IN LISTS _drv_dirs)
   file(GLOB_RECURSE _dd CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/drivers/${_d}/*.cpp")
   list(APPEND _drv_srcs ${_dd})
@@ -132,6 +135,9 @@ set(_plat_win
   os_windows.cpp display_server_windows.cpp key_mapping_windows.cpp windows_terminal_logger.cpp
   windows_utils.cpp native_menu_windows.cpp gl_manager_windows_native.cpp wgl_detect_version.cpp
   rendering_context_driver_vulkan_windows.cpp drop_target_windows.cpp crash_handler_windows_seh.cpp)
+if(GODOT_ANGLE)
+  list(APPEND _plat_win gl_manager_windows_angle.cpp)
+endif()
 list(TRANSFORM _plat_win PREPEND "${CMAKE_SOURCE_DIR}/platform/windows/")
 add_library(godot_platform STATIC ${_plat_win} "${GODOT_GEN_DIR}/platform/register_platform_apis.gen.cpp")
 target_link_libraries(godot_platform PUBLIC godot_defines godot_platform_windows)
@@ -163,6 +169,40 @@ target_link_libraries(godot_platform PRIVATE godot_tts)
 target_include_directories(godot_platform PRIVATE "${CMAKE_SOURCE_DIR}/platform")
 add_dependencies(godot_platform godot_generated godot_shaders)
 set_source_files_properties("${GODOT_GEN_DIR}/platform/register_platform_apis.gen.cpp" PROPERTIES GENERATED TRUE)
+
+# D3D12 driver: isolated object lib so the Mesa include tree + Mesa defines don't leak into the
+# rest of the build (drivers/d3d12/SCsub adds every godot-mesa subdir to the include path).
+set(GODOT_D3D12_LIB "")
+if(GODOT_D3D12)
+  set(_mesa_gm "${GODOT_BUILD_DEPS}/mesa-${GODOT_ARCH}-msvc/godot-mesa")
+  execute_process(COMMAND "${GODOT_PYTHON}" "${CMAKE_SOURCE_DIR}/misc/cmake/emit_mesa_includes.py" "${_mesa_gm}"
+    OUTPUT_VARIABLE _mesa_inc OUTPUT_STRIP_TRAILING_WHITESPACE)
+  string(REPLACE "\n" ";" _mesa_inc "${_mesa_inc}")
+  if(EXISTS "${_mesa_gm}/VERSION.info")
+    file(READ "${_mesa_gm}/VERSION.info" _mesa_ver)
+  else()
+    file(READ "${_mesa_gm}/VERSION" _mesa_ver)
+  endif()
+  string(STRIP "${_mesa_ver}" _mesa_ver)
+  file(GLOB_RECURSE _d3d12_srcs CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/drivers/d3d12/*.cpp")
+  add_library(godot_d3d12 OBJECT ${_d3d12_srcs} "${CMAKE_SOURCE_DIR}/thirdparty/d3d12ma/D3D12MemAlloc.cpp")
+  target_link_libraries(godot_d3d12 PRIVATE godot_defines godot_platform_windows)
+  target_compile_options(godot_d3d12 PRIVATE /w)
+  target_include_directories(godot_d3d12 PRIVATE ${_mesa_inc}
+    "${CMAKE_SOURCE_DIR}/thirdparty/directx_headers/include/directx"
+    "${CMAKE_SOURCE_DIR}/thirdparty/directx_headers/include/dxguids"
+    "${CMAKE_SOURCE_DIR}/thirdparty/d3d12ma")
+  target_compile_definitions(godot_d3d12 PRIVATE
+    WINDOWS_NO_FUTEX __STDC_CONSTANT_MACROS __STDC_FORMAT_MACROS __STDC_LIMIT_MACROS
+    "PACKAGE_VERSION=\"${_mesa_ver}\"" "PACKAGE_BUGREPORT=\"https://gitlab.freedesktop.org/mesa/mesa/-/issues\""
+    PIPE_SUBSYSTEM_WINDOWS_USER "_Static_assert=static_assert" HAVE_STRUCT_TIMESPEC
+    _USE_MATH_DEFINES VC_EXTRALEAN _CRT_SECURE_NO_WARNINGS _CRT_SECURE_NO_DEPRECATE
+    _SCL_SECURE_NO_WARNINGS _SCL_SECURE_NO_DEPRECATE _ALLOW_KEYWORD_MACROS NOMINMAX
+    AGILITY_SDK_ENABLED DCOMP_ENABLED)
+  add_dependencies(godot_d3d12 godot_generated godot_shaders)
+  set(GODOT_D3D12_LIB godot_d3d12)
+  message(STATUS "godot_d3d12: ${_mesa_ver}, ${CMAKE_SOURCE_DIR} mesa includes")
+endif()
 
 # editor (editor/SCsub): editor-build only; huge component + its codegen. Defines godot_editor.
 include(GodotEditor)

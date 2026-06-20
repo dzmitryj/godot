@@ -49,6 +49,7 @@ target_link_libraries(godot PRIVATE
   godot_platform
   godot_core
   ${GODOT_ORPHAN_TP}        # freetype/msdfgen (thirdparty-only modules, no own .cpp)
+  ${GODOT_D3D12_LIB}        # D3D12 driver + d3d12ma (isolated mesa-coupled object lib)
   godot_defines
   godot_platform_windows)
 
@@ -61,6 +62,22 @@ endif()
 target_link_options(godot PRIVATE /MANIFEST:NO)
 
 godot_set_output(godot)
+
+# D3D12 needs the Agility SDK runtime DLLs next to the exe (platform/windows/SCsub copies them).
+if(GODOT_D3D12)
+  set(_agility_arch "x64")
+  if(GODOT_ARCH STREQUAL "arm64")
+    set(_agility_arch "arm64")
+  endif()
+  set(_agility_bin "${GODOT_BUILD_DEPS}/agility_sdk/build/native/bin/${_agility_arch}")
+  foreach(_dll D3D12Core.dll d3d12SDKLayers.dll)
+    if(EXISTS "${_agility_bin}/${_dll}")
+      add_custom_command(TARGET godot POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_agility_bin}/${_dll}" "${CMAKE_SOURCE_DIR}/bin/${_dll}"
+        COMMENT "copy Agility ${_dll}")
+    endif()
+  endforeach()
+endif()
 
 # ---- Console wrapper executable -----------------------------------------------------------
 # Relaunches the GUI exe with stdout attached. Standalone console-subsystem program.
